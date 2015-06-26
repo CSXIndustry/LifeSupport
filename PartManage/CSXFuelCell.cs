@@ -82,7 +82,7 @@ namespace CSXIndustry.LifeSupport.PartManage
             if (cooling && part.temperature > extTemp)
             {
                 float water = (float)part.RequestResource(CSXResources.byWater, (2.0f * reactionRate) * fixedDeltaTime, ResourceFlowMode.NO_FLOW) / (2.0f * reactionRate * fixedDeltaTime);
-                cellTemp = Mathf.Lerp(cellTemp, extTemp, 15.0f * water * fixedDeltaTime);
+                cellTemp = Mathf.Lerp(cellTemp, extTemp, coolingRate * water * fixedDeltaTime);
                 return true;
             }
             else if (!isWorking && !cooling && part.temperature > extTemp)
