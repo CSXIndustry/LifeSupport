@@ -22,6 +22,7 @@ namespace CSXIndustry.LifeSupport.PartManage
 {
     public class CSXElectrolyteModule : CSXFilterModule
     {
+
         public CSXElectrolyteModule()
         {
             this.FilterType = CSXFilterTypes.Electrolyte;
@@ -37,7 +38,7 @@ namespace CSXIndustry.LifeSupport.PartManage
 
         private bool PerformReaction(float fixedDeltaTime)
         {
-            float water = part.RequestResource(CSXResources.pureWater, 3.0f * filterRate * fixedDeltaTime);
+            float water = part.RequestResource(CSXResources.pureWater, filterRate * fixedDeltaTime);
 
             if (water > 0)
             {
