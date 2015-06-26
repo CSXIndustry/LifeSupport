@@ -24,9 +24,15 @@ namespace CSXIndustry.LifeSupport.PartManage
     {
         [KSPField]
         public float reactionRate;
+        [KSPField]
+        public float dissipationRate;
+        [KSPField]
+        public float coolingRate;
 
         [KSPField(guiActive = true, guiName = "Cell Temperature", guiUnits = "C", guiFormat = "#,000")]
         private float cellTemp = 0f;
+
+        private float extTemp;
 
         private bool cooling;
 
@@ -37,14 +43,13 @@ namespace CSXIndustry.LifeSupport.PartManage
 
         public override void UpdatePart(float fixedDeltaTime)
         {
+            extTemp = (float) this.part.externalTemperature;
+            cellTemp = (float) this.part.temperature;
+
             UpdateCell(fixedDeltaTime);
 
-            if(cellTemp < 1000f)
-            {
-                if (cooling)
-                    DeactivateCooling();
-            }
-            else UpdateCooling(fixedDeltaTime);
+            if (!UpdateCooling(fixedDeltaTime) && cooling)
+                DeactivateCooling();
 
             this.part.temperature = cellTemp;
         }
@@ -64,7 +69,7 @@ namespace CSXIndustry.LifeSupport.PartManage
 
                 part.RequestResource(CSXResources.heat, (-10.0 * reactionRate) * fixedDeltaTime, ResourceFlowMode.NO_FLOW);
                 if (part.Resources[CSXResources.heat].amount >= part.Resources[CSXResources.heat].maxAmount)
-                    cellTemp += 10.0f * fixedDeltaTime;
+                    cellTemp = Mathf.Lerp(cellTemp, cellTemp + 10.0f, dissipationRate * fixedDeltaTime);
 
                 return true;
             }
@@ -74,15 +79,24 @@ namespace CSXIndustry.LifeSupport.PartManage
 
         private bool UpdateCooling(float fixedDeltaTime)
         {
-            if(cooling)
+            if (cooling && part.temperature > extTemp)
             {
                 float water = (float)part.RequestResource(CSXResources.byWater, (2.0f * reactionRate) * fixedDeltaTime, ResourceFlowMode.NO_FLOW) / (2.0f * reactionRate * fixedDeltaTime);
-                cellTemp -= (15.0f * water) * fixedDeltaTime;
+                cellTemp = Mathf.Lerp(cellTemp, extTemp, 15.0f * water * fixedDeltaTime);
                 return true;
+            }
+            else if (!isWorking && !cooling && part.temperature > extTemp)
+            {
+                cellTemp = Mathf.Lerp(cellTemp, extTemp, dissipationRate * fixedDeltaTime);
+                return false;
+            }
+            else if (part.temperature <= extTemp)
+            {
+                cellTemp = Mathf.Lerp(cellTemp, extTemp, dissipationRate * fixedDeltaTime);
+                return false;
             }
             else
             {
-                cellTemp -= 1.0f * fixedDeltaTime;
                 return false;
             }
         } // End Update Cooling
